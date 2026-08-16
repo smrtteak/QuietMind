@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#faf5ee" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1a1714" media="(prefers-color-scheme: dark)" />
+<meta name="description" content="QuietMind — A gentler way to check in. Notice your days, not your streaks." />
+<title>QuietMind — A gentler way to check in</title>
+
+<!-- PWA manifest for "Add to Home Screen" -->
+<link rel="manifest" href="manifest.webmanifest" />
+
+<!-- iOS / Android home screen icons -->
+<link rel="apple-touch-icon" href="logo1.png" />
+<link rel="icon" type="image/png" href="logo1.png" />
+
+<!-- iOS PWA settings -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="QuietMind" />
+<meta name="mobile-web-app-capable" content="yes" />
+
+<!-- Open Graph / social sharing -->
+<meta property="og:title" content="QuietMind — A gentler way to check in" />
+<meta property="og:description" content="Notice your days, not your streaks. A quiet daily check-in." />
+<meta property="og:image" content="logo1.png" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@300..600&display=swap" rel="stylesheet">
+
+<!-- jsPDF for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="locked">
+
+<!-- ============== LOCK SCREEN ============== -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-content">
+    <img src="logo1.png" alt="QuietMind" class="lock-logo" onerror="this.style.display='none'; document.getElementById('lockLogoFallback').style.display='flex';" />
+    <div class="lock-logo-fallback" id="lockLogoFallback">
+      <div class="logo-mark big"></div>
+    </div>
+    <h1 class="lock-title">QuietMind</h1>
+    <p class="lock-subtitle">A gentler way to check in.</p>
+    <div class="lock-pin-area">
+      <input type="password" inputmode="numeric" maxlength="6" pattern="[0-9]*" class="lock-pin-input" id="lockPinInput" placeholder="••••" autocomplete="off" />
+      <button class="lock-submit" id="lockSubmit" aria-label="Unlock">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <p class="lock-hint" id="lockHint">Set a PIN to keep your entries private</p>
+    <button class="lock-skip" id="lockSkip">Skip — use without a PIN</button>
+  </div>
+</div>
+
+<!-- ============== MAIN APP ============== -->
+<div class="app" id="app" style="display:none;">
+
+<div class="bg-layer">
+  <div class="blob blob-1" data-speed="0.2"></div>
+  <div class="blob blob-2" data-speed="0.35"></div>
+  <div class="blob blob-3" data-speed="0.15"></div>
+  <div class="blob blob-4" data-speed="0.5"></div>
+</div>
+
+<nav>
+  <div class="logo">
+    <img src="logo1.png" alt="" class="nav-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';" />
+    <span class="logo-fallback" style="display:none;">
+      <span class="logo-mark"></span>
+      <span>QuietMind</span>
+    </span>
+    <span class="logo-text-only">QuietMind</span>
+  </div>
+  <div class="nav-links">
+    <a href="#philosophy">Philosophy</a>
+    <a href="#checkin">Check-in</a>
+    <a href="#trends">Patterns</a>
+    <a href="#privacy">Privacy</a>
+  </div>
+  <div class="nav-actions">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="icon-btn" id="lockBtn" aria-label="Lock app" title="Lock">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ============== SETTINGS PANEL ============== -->
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-content">
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="settingsClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Appearance</h3>
+      <div class="setting-row">
+        <div>
+          <strong>Theme</strong>
+          <p style="margin:0; font-size:0.85rem; color:var(--ink-soft);">Light, dark, or follow your system</p>
+        </div>
+        <div class="theme-pills">
+          <button class="theme-pill" data-theme="light">Light</button>
+          <button class="theme-pill" data-theme="dark">Dark</button>
+          <button class="theme-pill" data-theme="auto">Auto</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Privacy</h3>
+      <div class="setting-row">
+        <div>
+          <strong>PIN lock</strong>
+          <p style="margin:0; font-size:0.85rem; color:var(--ink-soft);" id="pinStatus">No PIN set</p>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="footer-btn" id="setPinBtn">Set PIN</button>
+          <button class="footer-btn" id="removePinBtn" style="display:none;">Remove PIN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Export your check-ins</h3>
+      <p style="font-size:0.9rem; color:var(--ink-soft); margin-bottom:1rem;">Generate a PDF of any range of your entries. Useful for sharing with a therapist, or just keeping a copy.</p>
+
+      <div class="export-row">
+        <label for="exportDays">How many days back?</label>
+        <div class="slider-row">
+          <input type="range" id="exportDays" min="1" max="30" value="7" />
+          <span class="slider-value" id="exportDaysValue">7 days</span>
+        </div>
+        <p class="export-limit" id="exportLimit">You have <strong id="exportAvailable">0</strong> days of check-ins available.</p>
+      </div>
+
+      <button class="btn-primary" id="exportPdfBtn" style="margin-top:1rem;">Download PDF</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Data</h3>
+      <div class="data-buttons">
+        <button class="footer-btn" id="exportJsonBtn">Export JSON</button>
+        <button class="footer-btn" id="importJsonBtn">Import JSON</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+        <button class="footer-btn danger" id="clearBtn">Clear all data</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>About</h3>
+      <p style="font-size:0.9rem; color:var(--ink-soft); margin:0;">QuietMind · A working concept, not a real product.<br>Your data stays on your device.</p>
+    </div>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="floating-shapes">
+    <svg class="shape shape-1" data-speed="-0.3" width="80" height="80" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="30" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4"/>
+      <circle cx="40" cy="40" r="12" fill="currentColor" opacity="0.6"/>
+    </svg>
+    <svg class="shape shape-2" data-speed="0.4" width="100" height="100" viewBox="0 0 100 100">
+      <path d="M 50 10 Q 80 30 70 60 T 30 80 Q 10 50 30 30 T 50 10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    </svg>
+    <svg class="shape shape-3" data-speed="-0.2" width="60" height="60" viewBox="0 0 60 60">
+      <path d="M 30 5 L 55 50 L 5 50 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    </svg>
+    <svg class="shape shape-4" data-speed="0.5" width="90" height="90" viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r="35" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+      <circle cx="45" cy="45" r="20" fill="currentColor" opacity="0.3"/>
+    </svg>
+  </div>
+
+  <span class="hero-eyebrow">A gentler way to check in</span>
+  <h1>Notice your days, <em>not your</em> streaks.</h1>
+  <p>A quiet daily check-in that helps you see patterns over time — without the guilt, the gamification, or the pressure to be consistent.</p>
+  <div class="hero-ctas">
+    <a href="#checkin" class="btn-primary">Try it now</a>
+    <a href="#philosophy" class="btn-secondary">How it works</a>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<section class="philosophy" id="philosophy">
+  <div class="container">
+    <span class="section-eyebrow reveal">The philosophy</span>
+    <h2 class="section-title reveal reveal-delay-1">Built for self-awareness, not self-optimization.</h2>
+    <p class="section-lead reveal reveal-delay-2">Most apps treat your mood like a metric to maximize. We treat it like a moment to notice.</p>
+
+    <div class="philosophy-grid">
+      <div class="principle reveal reveal-delay-1">
+        <div class="principle-icon" style="background: var(--peach);">🌿</div>
+        <h3>No streaks, ever</h3>
+        <p>Skip a day, skip a week. Nothing breaks. The app doesn't track your "consistency" — because rest isn't failure.</p>
+      </div>
+      <div class="principle reveal reveal-delay-2">
+        <div class="principle-icon" style="background: var(--lavender);">💬</div>
+        <h3>One line, not a journal</h3>
+        <p>Just one sentence on what shaped your day. Light enough to keep, meaningful enough to remember.</p>
+      </div>
+      <div class="principle reveal reveal-delay-3">
+        <div class="principle-icon" style="background: var(--sage);">🔕</div>
+        <h3>Gentle by default</h3>
+        <p>Reminders are optional, dismissible, and never guilt-driven. Silence is a feature, not a bug.</p>
+      </div>
+      <div class="principle reveal reveal-delay-1">
+        <div class="principle-icon" style="background: var(--coral);">📊</div>
+        <h3>Patterns, not performance</h3>
+        <p>See how your weeks actually feel. Notice trends without turning them into KPIs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<svg class="wave-divider" viewBox="0 0 1440 80" preserveAspectRatio="none">
+  <path d="M 0 40 Q 360 10 720 40 T 1440 40 L 1440 80 L 0 80 Z" fill="rgba(200, 184, 214, 0.15)"/>
+</svg>
+
+<section class="checkin" id="checkin">
+  <div class="container">
+    <span class="section-eyebrow reveal">The daily check-in</span>
+    <h2 class="section-title reveal reveal-delay-1">A 30-second pause.</h2>
+    <p class="section-lead reveal reveal-delay-2">Open the app. Pick how today feels. Write one sentence. Close it. That's it.</p>
+
+    <div class="checkin-layout">
+      <div class="reveal reveal-delay-1">
+        <h3 style="font-size: 1.6rem; margin-bottom: 1rem;">A 5-point scale, not a number</h3>
+        <p style="color: var(--ink-soft); margin-bottom: 1.5rem;">We use color and shape, not "rate your mood from 1 to 5." It feels less like filling out a form and more like noticing how you actually are.</p>
+        <ul style="list-style: none; color: var(--ink-soft); line-height: 2.2;">
+          <li>🌑 <strong style="color: var(--ink);">Heavy</strong> — for the days that weigh on you</li>
+          <li>🌫️ <strong style="color: var(--ink);">Quiet</strong> — flat, low-energy, muted</li>
+          <li>🌤️ <strong style="color: var(--ink);">Steady</strong> — okay, neither here nor there</li>
+          <li>🌸 <strong style="color: var(--ink);">Soft</strong> — gentle warmth, content</li>
+          <li>☀️ <strong style="color: var(--ink);">Bright</strong> — genuinely good</li>
+        </ul>
+        <p style="margin-top: 1.5rem; color: var(--ink-soft); font-style: italic;">Try it now — pick a mood and write something. Your entry will appear in the graph below.</p>
+      </div>
+
+      <div class="reveal reveal-delay-2">
+        <div class="phone-mockup">
+          <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="phone-floating-blob"></div>
+            <div class="phone-date" id="phoneDate">Today</div>
+            <div class="phone-greeting">How are <em>you</em>, really?</div>
+            <div class="phone-subgreeting" id="phoneSubgreeting">Pick what fits today</div>
+            <div class="mood-selector" id="moodSelector">
+              <button class="mood-btn" data-mood="1">🌑</button>
+              <button class="mood-btn" data-mood="2">🌫️</button>
+              <button class="mood-btn active" data-mood="3">�️</button>
+              <button class="mood-btn" data-mood="4">�</button>
+              <button class="mood-btn" data-mood="5">�️</button>
+            </div>
+            <textarea class="phone-input" id="phoneInput" placeholder="What's one thing that shaped today?"></textarea>
+            <button class="phone-save" id="phoneSave">Save quietly</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="trends" id="trends">
+  <div class="container">
+    <span class="section-eyebrow reveal">Patterns over time</span>
+    <h2 class="section-title reveal reveal-delay-1">See your weeks, not your stats.</h2>
+    <p class="section-lead reveal reveal-delay-2">A simple, glanceable view of how the last days and weeks have actually felt. Tap any day to see the one-liner you wrote.</p>
+
+    <div class="trends-graph reveal reveal-delay-3">
+      <div class="graph-header">
+        <h3 style="font-size: 1.2rem;" id="graphTitle">Your last 30 days</h3>
+        <div class="graph-tabs">
+          <button class="graph-tab" data-range="7">Week</button>
+          <button class="graph-tab active" data-range="30">Month</button>
+          <button class="graph-tab" data-range="90">3 months</button>
+        </div>
+      </div>
+
+      <div class="graph-svg-wrap" id="graphWrap">
+        <svg viewBox="0 0 800 280" width="100%" height="100%" id="moodGraph" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e8a491" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#e8a491" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#c8b8d6"/>
+              <stop offset="50%" stop-color="#e8a491"/>
+              <stop offset="100%" stop-color="#b8c9b1"/>
+            </linearGradient>
+          </defs>
+
+          <g stroke="rgba(128,128,128,0.15)" stroke-width="1">
+            <line x1="0" y1="50" x2="800" y2="50"/>
+            <line x1="0" y1="100" x2="800" y2="100"/>
+            <line x1="0" y1="150" x2="800" y2="150"/>
+            <line x1="0" y1="200" x2="800" y2="200"/>
+            <line x1="0" y1="250" x2="800" y2="250"/>
+          </g>
+
+          <g font-family="Inter" font-size="10" fill="currentColor" opacity="0.5">
+            <text x="5" y="54">bright</text>
+            <text x="5" y="154">steady</text>
+            <text x="5" y="254">heavy</text>
+          </g>
+
+          <path id="graphArea" d="" fill="url(#lineGrad)"/>
+          <path id="graphLine" d="" fill="none" stroke="url(#strokeGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <g id="graphPoints"></g>
+
+          <g font-family="Inter" font-size="10" fill="currentColor" opacity="0.5" text-anchor="middle" id="xLabels"></g>
+        </svg>
+        <div class="graph-tooltip" id="graphTooltip"></div>
+      </div>
+
+      <div id="graphEmpty" class="empty-state" style="display:none;">
+        <div class="empty-state-icon">�</div>
+        <p>Your graph will appear here once you save your first check-in.</p>
+      </div>
+
+      <div class="insight" id="insight" style="display:none;">
+        <span class="insight-icon" id="insightIcon">🌤️</span>
+        <span id="insightText"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<svg class="wave-divider" viewBox="0 0 1440 80" preserveAspectRatio="none">
+  <path d="M 0 40 Q 360 70 720 40 T 1440 40 L 1440 80 L 0 80 Z" fill="rgba(184, 201, 177, 0.12)"/>
+</svg>
+
+<section class="reminders" id="reminders">
+  <div class="container">
+    <span class="section-eyebrow reveal">Reminders, gently</span>
+    <h2 class="section-title reveal reveal-delay-1" style="margin-left:auto;margin-right:auto;">Reminders, but <em>quiet</em>.</h2>
+    <p class="section-lead reveal reveal-delay-2" style="margin-left:auto;margin-right:auto;">Other apps punish you for missing a day. We don't even mention it. Reminders are off by default, and when they're on, they're easy to ignore.</p>
+
+    <div class="notif-grid reveal reveal-delay-3">
+      <div class="notif notif-good">
+        <div class="notif-header"><span class="notif-title">QuietMind</span><span>8:00 pm</span></div>
+        <div class="notif-body">Just checking in — no pressure. Hope your day was okay. 🌿</div>
+      </div>
+      <div class="notif notif-bad">
+        <div class="notif-header"><span class="notif-title">QuietMind</span><span>8:00 pm</span></div>
+        <div class="notif-body">You missed your check-in yesterday! Don't break your streak!</div>
+      </div>
+      <div class="notif notif-good">
+        <div class="notif-header"><span class="notif-title">QuietMind</span><span>9:00 pm</span></div>
+        <div class="notif-body">A quiet moment whenever you're ready. No rush.</div>
+      </div>
+      <div class="notif notif-bad">
+        <div class="notif-header"><span class="notif-title">QuietMind</span><span>9:00 pm</span></div>
+        <div class="notif-body">🔥 You're on a 14-day streak! Don't lose it now!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="privacy" id="privacy">
+  <div class="container">
+    <div class="privacy-layout">
+      <div class="reveal">
+        <span class="section-eyebrow">Your data, your device</span>
+        <h2 class="section-title">Local-first. Always.</h2>
+        <p class="section-lead">Your check-ins live on your device, in your browser's local storage. Not on our servers, not in some training dataset, not in a cloud. If you clear your browser data, your entries go with it.</p>
+        <p style="color: var(--ink-soft);">Optional PIN lock keeps entries private if someone else picks up your phone.</p>
+      </div>
+
+      <div class="device-illustration reveal reveal-delay-2">
+        <div class="orbit orbit-2"><div class="orbit-dot orbit-dot-2"></div></div>
+        <div class="orbit orbit-1"><div class="orbit-dot"></div></div>
+        <div class="lock-circle">🔒</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="cta">
+  <div class="container">
+    <h2 class="reveal">A gentler way<br>to know yourself.</h2>
+    <p class="reveal reveal-delay-1">This is a working prototype — scroll up, save a check-in, and watch it appear in your graph. Use it as often as feels right.</p>
+    <p class="reveal reveal-delay-2" style="font-size: 0.95rem; color: var(--ink-faint); font-style: italic;">No login. No cloud. Just you and your browser.</p>
+  </div>
+</section>
+
+<footer>
+  <p style="margin-bottom: 1rem;">© 2025 QuietMind · A working concept, not a real product</p>
+  <p><a href="#" id="openSettingsLink">Settings</a> · <a href="#privacy">Privacy</a></p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+</div><!-- /.app -->
+
+<script src="app.js"></script>
+</body>
+</html>

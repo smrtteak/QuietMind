@@ -1,0 +1,28 @@
+{
+  "name": "QuietMind",
+  "short_name": "QuietMind",
+  "description": "A gentler way to check in. Notice your days, not your streaks.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf5ee",
+  "theme_color": "#3a3530",
+  "categories": ["health", "lifestyle", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "logo1.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo1.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
