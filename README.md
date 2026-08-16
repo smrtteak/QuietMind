@@ -4,9 +4,6 @@ A gentler way to check in. A working concept for a daily mood tracker that helps
 
 🌿 **[Live demo](https://quietmind.vercel.app)** ← replace with your URL
 
-![QuietMind screenshot](screenshot.png) ← add a screenshot later
-
----
 
 ## The idea
 
